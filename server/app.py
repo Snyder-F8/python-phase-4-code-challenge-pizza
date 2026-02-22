@@ -2,7 +2,7 @@
 
 from models import db, Restaurant, RestaurantPizza, Pizza
 from flask_migrate import Migrate
-from flask import Flask, request
+from flask import Flask, request, make_response
 from flask_restful import Api, Resource
 import os
 
@@ -61,21 +61,10 @@ class RestaurantById(Resource):
         if not restaurant:
             return {"error": "Restaurant not found"}, 404
 
-        # Explicit serialization to match expected JSON
+        # Use rules instead of deep only to prevent recursion errors
         return restaurant.to_dict(
-            only=(
-                "id",
-                "name",
-                "address",
-                "restaurant_pizzas",
-                "restaurant_pizzas.id",
-                "restaurant_pizzas.price",
-                "restaurant_pizzas.pizza_id",
-                "restaurant_pizzas.restaurant_id",
-                "restaurant_pizzas.pizza",
-                "restaurant_pizzas.pizza.id",
-                "restaurant_pizzas.pizza.name",
-                "restaurant_pizzas.pizza.ingredients",
+            rules=(
+                "-restaurant_pizzas.restaurant",
             )
         ), 200
 
@@ -84,6 +73,10 @@ class RestaurantById(Resource):
 
         if not restaurant:
             return {"error": "Restaurant not found"}, 404
+
+        # If cascade isn't configured, manually delete children
+        for rp in restaurant.restaurant_pizzas:
+            db.session.delete(rp)
 
         db.session.delete(restaurant)
         db.session.commit()
@@ -118,6 +111,9 @@ class RestaurantPizzas(Resource):
     def post(self):
         data = request.get_json()
 
+        if not data:
+            return {"errors": ["Invalid JSON"]}, 400
+
         try:
             new_restaurant_pizza = RestaurantPizza(
                 price=data["price"],
@@ -129,23 +125,14 @@ class RestaurantPizzas(Resource):
             db.session.commit()
 
             return new_restaurant_pizza.to_dict(
-                only=(
-                    "id",
-                    "price",
-                    "pizza_id",
-                    "restaurant_id",
-                    "pizza",
-                    "pizza.id",
-                    "pizza.name",
-                    "pizza.ingredients",
-                    "restaurant",
-                    "restaurant.id",
-                    "restaurant.name",
-                    "restaurant.address",
+                rules=(
+                    "-restaurant.restaurant_pizzas",
+                    "-pizza.restaurant_pizzas",
                 )
             ), 201
 
         except ValueError as e:
+            db.session.rollback()
             return {"errors": [str(e)]}, 400
 
 
