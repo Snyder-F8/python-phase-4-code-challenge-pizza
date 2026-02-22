@@ -112,7 +112,7 @@ class RestaurantPizzas(Resource):
         data = request.get_json()
 
         if not data:
-            return {"errors": ["Invalid JSON"]}, 400
+            return {"errors": ["validation errors"]}, 400  # treat invalid JSON same as validation
 
         try:
             new_restaurant_pizza = RestaurantPizza(
@@ -131,9 +131,9 @@ class RestaurantPizzas(Resource):
                 )
             ), 201
 
-        except ValueError as e:
+        except Exception:
             db.session.rollback()
-            return {"errors": [str(e)]}, 400
+            return {"errors": ["validation errors"]}, 400
 
 
 api.add_resource(RestaurantPizzas, "/restaurant_pizzas")
