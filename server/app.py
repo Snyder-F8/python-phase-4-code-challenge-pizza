@@ -61,7 +61,23 @@ class RestaurantById(Resource):
         if not restaurant:
             return {"error": "Restaurant not found"}, 404
 
-        return restaurant.to_dict(), 200
+        # Explicit serialization to match expected JSON
+        return restaurant.to_dict(
+            only=(
+                "id",
+                "name",
+                "address",
+                "restaurant_pizzas",
+                "restaurant_pizzas.id",
+                "restaurant_pizzas.price",
+                "restaurant_pizzas.pizza_id",
+                "restaurant_pizzas.restaurant_id",
+                "restaurant_pizzas.pizza",
+                "restaurant_pizzas.pizza.id",
+                "restaurant_pizzas.pizza.name",
+                "restaurant_pizzas.pizza.ingredients",
+            )
+        ), 200
 
     def delete(self, id):
         restaurant = Restaurant.query.get(id)
@@ -112,7 +128,22 @@ class RestaurantPizzas(Resource):
             db.session.add(new_restaurant_pizza)
             db.session.commit()
 
-            return new_restaurant_pizza.to_dict(), 201
+            return new_restaurant_pizza.to_dict(
+                only=(
+                    "id",
+                    "price",
+                    "pizza_id",
+                    "restaurant_id",
+                    "pizza",
+                    "pizza.id",
+                    "pizza.name",
+                    "pizza.ingredients",
+                    "restaurant",
+                    "restaurant.id",
+                    "restaurant.name",
+                    "restaurant.address",
+                )
+            ), 201
 
         except ValueError as e:
             return {"errors": [str(e)]}, 400
