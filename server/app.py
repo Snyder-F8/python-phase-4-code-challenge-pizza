@@ -23,18 +23,16 @@ db.init_app(app)
 api = Api(app)
 
 
-# ======================================
+
 # Root Route
-# ======================================
 
 @app.route("/")
 def index():
     return "<h1>Code challenge</h1>"
 
 
-# ======================================
 # GET /restaurants
-# ======================================
+
 
 class Restaurants(Resource):
     def get(self):
@@ -48,10 +46,9 @@ class Restaurants(Resource):
 api.add_resource(Restaurants, "/restaurants")
 
 
-# ======================================
 # GET /restaurants/<int:id>
 # DELETE /restaurants/<int:id>
-# ======================================
+
 
 class RestaurantById(Resource):
 
@@ -87,9 +84,7 @@ class RestaurantById(Resource):
 api.add_resource(RestaurantById, "/restaurants/<int:id>")
 
 
-# ======================================
 # GET /pizzas
-# ======================================
 
 class Pizzas(Resource):
     def get(self):
@@ -103,9 +98,9 @@ class Pizzas(Resource):
 api.add_resource(Pizzas, "/pizzas")
 
 
-# ======================================
+
 # POST /restaurant_pizzas
-# ======================================
+
 
 class RestaurantPizzas(Resource):
     def post(self):
